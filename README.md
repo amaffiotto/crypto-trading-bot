@@ -192,6 +192,54 @@ crypto-trading-bot/
 
 💡 **Tip:** Use **1 Day timeframe** with **300+ days** of data for best backtest results. Lower timeframes (1h, 4h) tend to generate too many false signals.
 
+## Roadmap (TODO)
+
+Features needed before real money trading:
+
+### Risk Management
+- [ ] Position sizing (Kelly criterion / fixed fractional)
+- [ ] Maximum drawdown limit (auto-stop if losing too much)
+- [ ] Maximum daily loss limit
+- [ ] Portfolio-level risk management
+- [ ] Exposure limits per asset
+
+### Order Execution
+- [ ] Slippage simulation in backtest
+- [ ] Handle partial order fills
+- [ ] Retry logic for network failures
+- [ ] Rate limit handling for exchange APIs
+- [ ] Order book depth analysis
+
+### Monitoring & Alerts
+- [ ] Real-time dashboard with open positions
+- [ ] Email/SMS alerts for critical events
+- [ ] Auto-restart on crash
+- [ ] Health check endpoint
+- [ ] Trade journal with notes
+
+### Testing & Validation
+- [ ] Unit tests for core modules
+- [ ] Integration tests with exchange sandbox
+- [ ] Paper trading mode validation (2-3 months)
+- [ ] Walk-forward optimization
+- [ ] Out-of-sample testing
+
+### Strategy Improvements
+- [ ] Machine learning signal filtering
+- [ ] Multi-timeframe confirmation
+- [ ] Sentiment analysis integration
+- [ ] Market regime detection (bull/bear/sideways)
+- [ ] Dynamic parameter optimization
+
+### Infrastructure
+- [ ] Docker containerization
+- [ ] Cloud deployment guide (AWS/GCP)
+- [ ] Database for trade history (PostgreSQL)
+- [ ] Backup & recovery procedures
+- [ ] API authentication for remote access
+
+---
+
 ## Why?
 
 I'm working on this project because I really believe that AI can give the power to people who don't know how to code at a high level to build something meaningful.
