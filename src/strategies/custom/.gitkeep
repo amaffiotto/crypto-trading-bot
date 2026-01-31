@@ -1,0 +1,2 @@
+# Place your custom strategies here
+# Custom strategies should extend BaseStrategy from src.strategies.base

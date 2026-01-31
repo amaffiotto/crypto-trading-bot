@@ -1,0 +1,55 @@
+{
+  "name": "crypto-trading-bot",
+  "version": "1.0.0",
+  "description": "Crypto Trading Bot - Backtest and trade cryptocurrencies",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux"
+  },
+  "author": "Crypto Trading Bot",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.cryptotradingbot.app",
+    "productName": "Crypto Trading Bot",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../",
+        "to": "python",
+        "filter": [
+          "src/**",
+          "config/**",
+          "requirements.txt"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.finance",
+      "icon": "assets/icons/icon.icns",
+      "target": ["dmg", "zip"]
+    },
+    "win": {
+      "icon": "assets/icons/icon.ico",
+      "target": ["nsis", "portable"]
+    },
+    "linux": {
+      "icon": "assets/icons",
+      "target": ["AppImage", "deb"]
+    }
+  }
+}

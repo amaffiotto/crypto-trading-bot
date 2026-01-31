@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:*">
+    <title>Crypto Trading Bot</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">CRYPTO BOT</h1>
+                <span class="version">v1.0.0</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">&#9632;</span>
+                    Dashboard
+                </button>
+                <button class="nav-item" data-page="backtest">
+                    <span class="nav-icon">&#9654;</span>
+                    Backtest
+                </button>
+                <button class="nav-item" data-page="live">
+                    <span class="nav-icon">&#9679;</span>
+                    Live Trading
+                </button>
+                <button class="nav-item" data-page="strategies">
+                    <span class="nav-icon">&#9733;</span>
+                    Strategies
+                </button>
+                <button class="nav-item" data-page="exchanges">
+                    <span class="nav-icon">&#8644;</span>
+                    Exchanges
+                </button>
+                <button class="nav-item" data-page="settings">
+                    <span class="nav-icon">&#9881;</span>
+                    Settings
+                </button>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot disconnected"></span>
+                    <span>Connecting...</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Page -->
+            <section class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="page-content">
+                    <div class="cards-grid">
+                        <div class="card">
+                            <h3>Welcome to Crypto Trading Bot</h3>
+                            <p>Backtest trading strategies and execute them on cryptocurrency exchanges.</p>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Getting Started</h3>
+                            <ol>
+                                <li>Configure an exchange in Settings</li>
+                                <li>Choose a strategy that fits your market view</li>
+                                <li>Run a backtest to see historical performance</li>
+                                <li>Start paper trading to test in real-time</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Strategy Tips</h3>
+                            <ul>
+                                <li><strong>Trending market:</strong> Use Trend Momentum or MA Crossover</li>
+                                <li><strong>Ranging market:</strong> Use Mean Reversion or RSI</li>
+                                <li>Always use 4h or 1d timeframe for better signals</li>
+                                <li>Start with paper trading, never risk real money first</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="card stats-card" id="statsCard">
+                            <h3>Quick Stats</h3>
+                            <div class="stats-grid">
+                                <div class="stat">
+                                    <span class="stat-value" id="strategyCount">-</span>
+                                    <span class="stat-label">Strategies</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value" id="exchangeCount">-</span>
+                                    <span class="stat-label">Exchanges</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value" id="backtestCount">-</span>
+                                    <span class="stat-label">Backtests</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Backtest Page -->
+            <section class="page" id="page-backtest">
+                <div class="page-header">
+                    <h2>Backtest</h2>
+                </div>
+                <div class="page-content">
+                    <div class="form-container">
+                        <div class="form-group">
+                            <label for="btStrategy">Strategy</label>
+                            <select id="btStrategy" class="form-control"></select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="btExchange">Exchange</label>
+                                <select id="btExchange" class="form-control">
+                                    <option value="binance">Binance</option>
+                                    <option value="coinbase">Coinbase</option>
+                                    <option value="kraken">Kraken</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="btSymbol">Symbol</label>
+                                <select id="btSymbol" class="form-control">
+                                    <option value="BTC/USDT">BTC/USDT</option>
+                                    <option value="ETH/USDT">ETH/USDT</option>
+                                    <option value="SOL/USDT">SOL/USDT</option>
+                                    <option value="XRP/USDT">XRP/USDT</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="btTimeframe">Timeframe <span class="hint">(1d recommended)</span></label>
+                                <select id="btTimeframe" class="form-control">
+                                    <option value="1h">1 Hour (noisy)</option>
+                                    <option value="4h">4 Hours</option>
+                                    <option value="1d" selected>1 Day ★</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="btPeriod">Period (days) <span class="hint">(300+ recommended)</span></label>
+                                <input type="number" id="btPeriod" class="form-control" value="300" min="30" max="730">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="btCapital">Initial Capital ($)</label>
+                                <input type="number" id="btCapital" class="form-control" value="10000" min="100">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="btFee">Fee (%)</label>
+                                <input type="number" id="btFee" class="form-control" value="0.1" step="0.01" min="0">
+                            </div>
+                        </div>
+                        
+                        <button id="btnRunBacktest" class="btn btn-primary btn-lg">
+                            Run Backtest
+                        </button>
+                    </div>
+                    
+                    <!-- Progress -->
+                    <div class="backtest-progress hidden" id="backtestProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p class="progress-text" id="progressText">Starting...</p>
+                    </div>
+                    
+                    <!-- Results -->
+                    <div class="backtest-results hidden" id="backtestResults">
+                        <h3>Results</h3>
+                        <div class="results-grid">
+                            <div class="result-item">
+                                <span class="result-label">Total Return</span>
+                                <span class="result-value" id="resultReturn">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">Sharpe Ratio</span>
+                                <span class="result-value" id="resultSharpe">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">Max Drawdown</span>
+                                <span class="result-value" id="resultDrawdown">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">Win Rate</span>
+                                <span class="result-value" id="resultWinRate">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">Total Trades</span>
+                                <span class="result-value" id="resultTrades">-</span>
+                            </div>
+                            <div class="result-item">
+                                <span class="result-label">Profit Factor</span>
+                                <span class="result-value" id="resultProfitFactor">-</span>
+                            </div>
+                        </div>
+                        <button id="btnOpenReport" class="btn btn-secondary">
+                            Open HTML Report
+                        </button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Live Trading Page -->
+            <section class="page" id="page-live">
+                <div class="page-header">
+                    <h2>Live Trading</h2>
+                </div>
+                <div class="page-content">
+                    <div class="live-status-card" id="liveStatusCard">
+                        <div class="status-indicator">
+                            <span class="status-dot" id="liveStatusDot"></span>
+                            <span class="status-text" id="liveStatusText">Stopped</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-container">
+                        <div class="form-group">
+                            <label for="liveMode">Mode</label>
+                            <select id="liveMode" class="form-control">
+                                <option value="paper">Paper Trading (Simulated)</option>
+                                <option value="dry_run">Dry Run (Signals Only)</option>
+                                <option value="live">Live Trading (Real Money)</option>
+                            </select>
+                            <small class="form-hint">Paper trading is recommended for testing</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="liveStrategy">Strategy</label>
+                            <select id="liveStrategy" class="form-control"></select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="liveExchange">Exchange</label>
+                                <select id="liveExchange" class="form-control">
+                                    <option value="binance">Binance</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="liveSymbol">Symbol</label>
+                                <select id="liveSymbol" class="form-control">
+                                    <option value="BTC/USDT">BTC/USDT</option>
+                                    <option value="ETH/USDT">ETH/USDT</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="liveTimeframe">Timeframe <span class="hint">(1d recommended)</span></label>
+                                <select id="liveTimeframe" class="form-control">
+                                    <option value="1h">1 Hour</option>
+                                    <option value="4h">4 Hours</option>
+                                    <option value="1d" selected>1 Day ★</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="livePositionSize">Position Size (%)</label>
+                                <input type="number" id="livePositionSize" class="form-control" value="10" min="1" max="100">
+                                <small class="form-hint">Percentage of balance per trade</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="liveCheckInterval">Check Interval (seconds)</label>
+                                <input type="number" id="liveCheckInterval" class="form-control" value="60" min="10" max="3600">
+                                <small class="form-hint">How often to check for signals</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="liveInitialBalance">Paper Balance ($)</label>
+                                <input type="number" id="liveInitialBalance" class="form-control" value="10000" min="100" max="1000000">
+                                <small class="form-hint">Starting balance for paper trading</small>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button id="btnStartLive" class="btn btn-success">
+                                Start Trading
+                            </button>
+                            <button id="btnStopLive" class="btn btn-danger" disabled>
+                                Stop Trading
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Stats -->
+                    <div class="live-stats hidden" id="liveStats">
+                        <h3>Session Stats</h3>
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <span class="stat-value" id="livePnL">$0.00</span>
+                                <span class="stat-label">Session P&L</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="liveTradesCount">0</span>
+                                <span class="stat-label">Trades</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="livePosition">None</span>
+                                <span class="stat-label">Position</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="liveBalance">$10,000</span>
+                                <span class="stat-label">Balance</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity Log -->
+                    <div class="live-log hidden" id="liveLog">
+                        <h3>Activity Log</h3>
+                        <div class="log-container" id="logContainer">
+                            <p class="log-empty">No activity yet. Start trading to see signals.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Warning Banner -->
+                    <div class="warning-banner" id="liveWarning">
+                        <strong>⚠️ Important:</strong> Paper trading uses simulated money. 
+                        For real trading, you must configure your exchange API keys in Settings.
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Strategies Page -->
+            <section class="page" id="page-strategies">
+                <div class="page-header">
+                    <h2>Strategies</h2>
+                </div>
+                <div class="page-content">
+                    <div class="strategies-list" id="strategiesList">
+                        <p class="loading">Loading strategies...</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Exchanges Page -->
+            <section class="page" id="page-exchanges">
+                <div class="page-header">
+                    <h2>Exchanges</h2>
+                </div>
+                <div class="page-content">
+                    <div class="card">
+                        <h3>Configured Exchanges</h3>
+                        <div id="exchangesList">
+                            <p class="loading">Loading...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Add Exchange</h3>
+                        <div class="form-container">
+                            <div class="form-group">
+                                <label for="newExchangeId">Exchange</label>
+                                <select id="newExchangeId" class="form-control">
+                                    <option value="binance">Binance</option>
+                                    <option value="coinbase">Coinbase</option>
+                                    <option value="kraken">Kraken</option>
+                                    <option value="kucoin">KuCoin</option>
+                                    <option value="bybit">Bybit</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="newApiKey">API Key</label>
+                                <input type="text" id="newApiKey" class="form-control" placeholder="Enter API Key">
+                            </div>
+                            <div class="form-group">
+                                <label for="newApiSecret">API Secret</label>
+                                <input type="password" id="newApiSecret" class="form-control" placeholder="Enter API Secret">
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="newSandbox" checked>
+                                <label for="newSandbox">Sandbox Mode (Testnet)</label>
+                            </div>
+                            <button id="btnAddExchange" class="btn btn-primary">
+                                Add Exchange
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Settings Page -->
+            <section class="page" id="page-settings">
+                <div class="page-header">
+                    <h2>Settings</h2>
+                </div>
+                <div class="page-content">
+                    <div class="card">
+                        <h3>Default Settings</h3>
+                        <div class="form-container">
+                            <div class="form-group">
+                                <label for="settingsCapital">Default Initial Capital ($)</label>
+                                <input type="number" id="settingsCapital" class="form-control" value="10000">
+                            </div>
+                            <div class="form-group">
+                                <label for="settingsFee">Default Fee (%)</label>
+                                <input type="number" id="settingsFee" class="form-control" value="0.1" step="0.01">
+                            </div>
+                            <button id="btnSaveSettings" class="btn btn-primary">
+                                Save Settings
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>About</h3>
+                        <p>Crypto Trading Bot v1.0.0</p>
+                        <p>Backtest your strategies and trade with confidence.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="scripts/api.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>

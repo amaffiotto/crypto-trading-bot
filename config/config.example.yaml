@@ -1,0 +1,60 @@
+# Crypto Trading Bot Configuration
+# Copy this file to config.yaml and edit with your settings
+
+# Logging level: DEBUG, INFO, WARNING, ERROR
+log_level: INFO
+
+# Exchange configurations
+exchanges:
+  - name: binance
+    api_key: "your_api_key_here"
+    api_secret: "your_api_secret_here"
+    sandbox: false  # Use testnet if available
+    
+  # Add more exchanges as needed:
+  # - name: kraken
+  #   api_key: "your_api_key"
+  #   api_secret: "your_api_secret"
+
+# Backtesting settings
+backtesting:
+  default_capital: 10000
+  fee_percent: 0.1          # Trading fee in percent
+  slippage_percent: 0.05    # Simulated slippage
+  default_timeframe: "1h"   # Default timeframe for backtests
+
+# Strategy configurations
+strategies:
+  ma_crossover:
+    fast_period: 9
+    slow_period: 21
+  
+  rsi:
+    period: 14
+    overbought: 70
+    oversold: 30
+  
+  macd:
+    fast_period: 12
+    slow_period: 26
+    signal_period: 9
+  
+  bollinger:
+    period: 20
+    std_dev: 2.0
+
+# Notification settings
+notifications:
+  telegram:
+    enabled: false
+    bot_token: "your_bot_token"
+    chat_id: "your_chat_id"
+  
+  discord:
+    enabled: false
+    webhook_url: "your_webhook_url"
+
+# Data cache settings
+data:
+  cache_directory: "data/ohlcv"
+  max_cache_age_days: 7  # Re-download data older than this
