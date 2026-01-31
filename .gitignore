@@ -49,8 +49,8 @@ config/secrets.yaml
 data/cache/
 *.parquet
 
-# Reports (optional - can be large)
-# reports/*.html
+# Reports (generated files - users will create their own)
+reports/*.html
 
 # Electron
 electron/node_modules/
