@@ -168,12 +168,15 @@ Then select option 1 (CLI) when prompted.
 crypto-trading-bot/
 ├── src/
 │   ├── strategies/      # 18 built-in trading strategies
+│   │   └── filters/     # Signal filters (regime, multi-timeframe)
 │   ├── backtesting/     # Backtest engine & reports
 │   ├── trading/         # Live trading engine
-│   ├── core/            # Exchange & data management
+│   ├── core/            # Exchange, data & database management
+│   ├── notifications/   # Telegram, Discord, Email, WhatsApp
 │   └── api/             # FastAPI server for GUI
 ├── electron/            # Electron GUI
 ├── config/              # Configuration files
+├── data/                # SQLite database & OHLCV cache
 └── reports/             # Generated backtest reports
 ```
 
@@ -191,6 +194,78 @@ crypto-trading-bot/
 ⚠️ **This is for educational purposes only.** Past performance does not guarantee future results.
 
 💡 **Tip:** Use **1 Day timeframe** with **300+ days** of data for best backtest results. Lower timeframes (1h, 4h) tend to generate too many false signals.
+
+## New Features
+
+### Multi-Channel Notifications
+
+Get alerts via your preferred channels:
+
+| Channel | Status | Notes |
+|---------|--------|-------|
+| Telegram | Ready | Bot API with rich formatting |
+| Discord | Ready | Webhooks with embeds |
+| Email | Ready | SMTP (Gmail, SendGrid, etc.) |
+| WhatsApp | Ready | Via Twilio API |
+
+Configure in `config/config.yaml` - see `config.example.yaml` for all options.
+
+### Strategy Filters
+
+Enhance any strategy with signal filters:
+
+```python
+from src.strategies.filters import FilteredStrategy, RegimeFilter, MultiTimeframeFilter
+from src.strategies.builtin.ma_crossover import MACrossover
+
+# Only trade in trending markets with higher timeframe confirmation
+strategy = FilteredStrategy(
+    MACrossover(),
+    filters=[
+        RegimeFilter(allowed_regimes=["trending_bullish", "trending_bearish"]),
+        MultiTimeframeFilter(confirmation_timeframes=["4h", "1d"])
+    ]
+)
+```
+
+### Docker Support
+
+Run with Docker:
+
+```bash
+# Build and start
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop
+docker-compose down
+```
+
+### API Authentication
+
+Secure your API with key-based authentication:
+
+```yaml
+# config/config.yaml
+api:
+  auth_enabled: true
+  api_key: "your-secret-key"  # Or set TRADING_BOT_API_KEY env var
+```
+
+Then include `X-API-Key` header in requests.
+
+### Trade Journal
+
+Record notes and lessons from your trades via API:
+
+- `GET /api/journal` - List entries
+- `POST /api/journal` - Create entry
+- `PATCH /api/journal/{id}` - Update entry
+- `DELETE /api/journal/{id}` - Delete entry
+
+---
 
 ## Roadmap (TODO)
 
@@ -211,11 +286,11 @@ Features needed before real money trading:
 - [ ] Order book depth analysis
 
 ### Monitoring & Alerts
-- [ ] Real-time dashboard with open positions
-- [ ] Email/SMS alerts for critical events
-- [ ] Auto-restart on crash
-- [ ] Health check endpoint
-- [ ] Trade journal with notes
+- [x] ~~Real-time dashboard with open positions~~ (via `/api/live/status`)
+- [x] ~~Email/SMS alerts for critical events~~ (Email, WhatsApp, Telegram, Discord)
+- [x] ~~Auto-restart on crash~~ (supervisor module)
+- [x] ~~Health check endpoint~~ (`/api/health/detailed`)
+- [x] ~~Trade journal with notes~~ (journal API + SQLite)
 
 ### Testing & Validation
 - [ ] Unit tests for core modules
@@ -226,17 +301,17 @@ Features needed before real money trading:
 
 ### Strategy Improvements
 - [ ] Machine learning signal filtering
-- [ ] Multi-timeframe confirmation
+- [x] ~~Multi-timeframe confirmation~~ (MultiTimeframeFilter)
 - [ ] Sentiment analysis integration
-- [ ] Market regime detection (bull/bear/sideways)
+- [x] ~~Market regime detection (bull/bear/sideways)~~ (RegimeFilter)
 - [ ] Dynamic parameter optimization
 
 ### Infrastructure
-- [ ] Docker containerization
+- [x] ~~Docker containerization~~ (Dockerfile + docker-compose)
 - [ ] Cloud deployment guide (AWS/GCP)
-- [ ] Database for trade history (PostgreSQL)
+- [x] ~~Database for trade history~~ (SQLite)
 - [ ] Backup & recovery procedures
-- [ ] API authentication for remote access
+- [x] ~~API authentication for remote access~~ (API key middleware)
 
 ---
 

@@ -1,0 +1,60 @@
+# Crypto Trading Bot - Docker Compose Configuration
+# 
+# Usage:
+#   docker-compose up -d          # Start all services
+#   docker-compose logs -f        # View logs
+#   docker-compose down           # Stop all services
+#   docker-compose build          # Rebuild images
+#
+# For development:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # Main trading bot API server
+  trading-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crypto-trading-bot
+    restart: unless-stopped
+    ports:
+      - "8765:8765"
+    volumes:
+      # Persist data, reports, and config
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./config:/app/config:ro
+    environment:
+      # API Configuration
+      - TRADING_BOT_API_KEY=${TRADING_BOT_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Timezone
+      - TZ=${TZ:-UTC}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - trading-network
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  trading-network:
+    driver: bridge
+
+# Optional: Add these services by creating additional compose files
+
+# Example: docker-compose.monitoring.yml for Prometheus/Grafana
+# Example: docker-compose.dev.yml for development overrides

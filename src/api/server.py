@@ -5,18 +5,23 @@ Provides REST API endpoints for the Electron GUI.
 """
 
 import asyncio
+import os
+import psutil
+import secrets
 import threading
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
 from src.core.config import ConfigManager
 from src.core.exchange import ExchangeManager
 from src.core.data_manager import DataManager
+from src.core.database import get_database
 from src.strategies.registry import StrategyRegistry
 from src.backtesting.engine import BacktestEngine
 from src.backtesting.metrics import MetricsCalculator
@@ -25,6 +30,9 @@ from src.trading.live_engine import LiveTradingEngine, TradingMode
 from src.utils.logger import get_logger
 
 logger = get_logger()
+
+# Server start time for uptime tracking
+SERVER_START_TIME = datetime.now()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -46,6 +54,52 @@ app.add_middleware(
 config = ConfigManager()
 registry = StrategyRegistry()
 registry.load_builtin()
+
+# API Key Security
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+
+
+async def verify_api_key(
+    request: Request,
+    api_key: Optional[str] = Security(api_key_header)
+) -> Optional[str]:
+    """
+    Verify API key if authentication is enabled.
+    
+    Exempt paths: /api/health, /docs, /openapi.json
+    """
+    # Check if auth is enabled
+    auth_enabled = config.get("api.auth_enabled", False)
+    
+    if not auth_enabled:
+        return None
+    
+    # Exempt certain paths
+    exempt_paths = ["/api/health", "/docs", "/openapi.json", "/redoc"]
+    if any(request.url.path.startswith(path) for path in exempt_paths):
+        return None
+    
+    # Get configured API key
+    configured_key = config.get("api.api_key") or os.environ.get("TRADING_BOT_API_KEY")
+    
+    if not configured_key:
+        # No key configured, allow access but warn
+        logger.warning("API auth enabled but no API key configured")
+        return None
+    
+    if not api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="API key required. Provide X-API-Key header."
+        )
+    
+    if not secrets.compare_digest(api_key, configured_key):
+        raise HTTPException(
+            status_code=403,
+            detail="Invalid API key"
+        )
+    
+    return api_key
 
 # Backtest state
 backtest_jobs: Dict[str, Dict[str, Any]] = {}
@@ -147,7 +201,7 @@ STRATEGY_METADATA = {
 # ============== Strategy Endpoints ==============
 
 @app.get("/api/strategies", response_model=List[StrategyInfo])
-async def get_strategies():
+async def get_strategies(_: str = Depends(verify_api_key)):
     """Get list of available trading strategies with metadata."""
     strategies = []
     for name, strategy_class in registry.get_all().items():
@@ -168,7 +222,7 @@ async def get_strategies():
 
 
 @app.get("/api/strategies/{name}")
-async def get_strategy(name: str):
+async def get_strategy(name: str, _: str = Depends(verify_api_key)):
     """Get details of a specific strategy."""
     strategy_class = registry.get(name)
     if not strategy_class:
@@ -187,7 +241,7 @@ async def get_strategy(name: str):
 # ============== Exchange Endpoints ==============
 
 @app.get("/api/exchanges")
-async def get_exchanges():
+async def get_exchanges(_: str = Depends(verify_api_key)):
     """Get list of configured exchanges."""
     configured = config.get("exchanges", {})
     return {
@@ -197,7 +251,7 @@ async def get_exchanges():
 
 
 @app.post("/api/exchanges")
-async def add_exchange(exchange_config: ExchangeConfig):
+async def add_exchange(exchange_config: ExchangeConfig, _: str = Depends(verify_api_key)):
     """Add or update an exchange configuration."""
     exchanges = config.get("exchanges", {})
     exchanges[exchange_config.exchange_id] = {
@@ -211,7 +265,7 @@ async def add_exchange(exchange_config: ExchangeConfig):
 
 
 @app.delete("/api/exchanges/{exchange_id}")
-async def remove_exchange(exchange_id: str):
+async def remove_exchange(exchange_id: str, _: str = Depends(verify_api_key)):
     """Remove an exchange configuration."""
     exchanges = config.get("exchanges", {})
     if exchange_id in exchanges:
@@ -319,7 +373,7 @@ def run_backtest_job(job_id: str, request: BacktestRequest):
 
 
 @app.post("/api/backtest", response_model=BacktestStatus)
-async def start_backtest(request: BacktestRequest, background_tasks: BackgroundTasks):
+async def start_backtest(request: BacktestRequest, background_tasks: BackgroundTasks, _: str = Depends(verify_api_key)):
     """Start a backtest job."""
     job_id = str(uuid.uuid4())[:8]
     
@@ -341,7 +395,7 @@ async def start_backtest(request: BacktestRequest, background_tasks: BackgroundT
 
 
 @app.get("/api/backtest/{job_id}", response_model=BacktestStatus)
-async def get_backtest_status(job_id: str):
+async def get_backtest_status(job_id: str, _: str = Depends(verify_api_key)):
     """Get status of a backtest job."""
     if job_id not in backtest_jobs:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
@@ -349,7 +403,7 @@ async def get_backtest_status(job_id: str):
 
 
 @app.get("/api/backtest")
-async def list_backtests():
+async def list_backtests(_: str = Depends(verify_api_key)):
     """List all backtest jobs."""
     return [BacktestStatus(**job) for job in backtest_jobs.values()]
 
@@ -357,7 +411,7 @@ async def list_backtests():
 # ============== Live Trading Endpoints ==============
 
 @app.post("/api/live/start")
-async def start_live_trading(request: LiveTradingRequest):
+async def start_live_trading(request: LiveTradingRequest, _: str = Depends(verify_api_key)):
     """Start live trading."""
     global live_engine, live_thread, live_strategy, live_params
     
@@ -418,7 +472,7 @@ async def start_live_trading(request: LiveTradingRequest):
 
 
 @app.post("/api/live/stop")
-async def stop_live_trading():
+async def stop_live_trading(_: str = Depends(verify_api_key)):
     """Stop live trading."""
     global live_engine
     
@@ -430,7 +484,7 @@ async def stop_live_trading():
 
 
 @app.get("/api/live/status", response_model=LiveStatus)
-async def get_live_status():
+async def get_live_status(_: str = Depends(verify_api_key)):
     """Get live trading status."""
     if not live_engine:
         return LiveStatus(running=False)
@@ -448,7 +502,7 @@ async def get_live_status():
 
 
 @app.get("/api/live/trades")
-async def get_live_trades():
+async def get_live_trades(_: str = Depends(verify_api_key)):
     """Get recent trades from live trading session."""
     if not live_engine:
         return {"trades": []}
@@ -469,7 +523,7 @@ async def get_live_trades():
 
 
 @app.get("/api/live/balance")
-async def get_live_balance():
+async def get_live_balance(_: str = Depends(verify_api_key)):
     """Get current balance for live/paper trading."""
     if not live_engine:
         return {"balance": 0, "currency": "USDT"}
@@ -487,10 +541,169 @@ async def get_live_balance():
     }
 
 
+# ============== Journal Endpoints ==============
+
+class JournalEntryCreate(BaseModel):
+    content: str
+    entry_type: str = "note"  # note, trade_review, lesson, market_analysis
+    trade_id: Optional[int] = None
+    symbol: Optional[str] = None
+    title: Optional[str] = None
+    tags: Optional[List[str]] = None
+    market_conditions: Optional[str] = None
+    lessons_learned: Optional[str] = None
+    rating: Optional[int] = None  # 1-5
+
+
+class JournalEntryUpdate(BaseModel):
+    content: Optional[str] = None
+    title: Optional[str] = None
+    tags: Optional[List[str]] = None
+    market_conditions: Optional[str] = None
+    lessons_learned: Optional[str] = None
+    rating: Optional[int] = None
+    entry_type: Optional[str] = None
+
+
+@app.get("/api/journal")
+async def get_journal_entries(
+    trade_id: Optional[int] = None,
+    symbol: Optional[str] = None,
+    entry_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    _: str = Depends(verify_api_key)
+):
+    """Get journal entries with optional filters."""
+    try:
+        db = get_database()
+        entries = db.get_journal_entries(
+            trade_id=trade_id,
+            symbol=symbol,
+            entry_type=entry_type,
+            limit=limit,
+            offset=offset
+        )
+        return {"entries": entries, "count": len(entries)}
+    except Exception as e:
+        logger.exception("Error fetching journal entries")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/journal")
+async def create_journal_entry(
+    entry: JournalEntryCreate,
+    _: str = Depends(verify_api_key)
+):
+    """Create a new journal entry."""
+    try:
+        db = get_database()
+        entry_id = db.insert_journal_entry(
+            content=entry.content,
+            entry_type=entry.entry_type,
+            trade_id=entry.trade_id,
+            symbol=entry.symbol,
+            title=entry.title,
+            tags=entry.tags,
+            market_conditions=entry.market_conditions,
+            lessons_learned=entry.lessons_learned,
+            rating=entry.rating
+        )
+        return {"status": "ok", "entry_id": entry_id}
+    except Exception as e:
+        logger.exception("Error creating journal entry")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.patch("/api/journal/{entry_id}")
+async def update_journal_entry(
+    entry_id: int,
+    entry: JournalEntryUpdate,
+    _: str = Depends(verify_api_key)
+):
+    """Update a journal entry."""
+    try:
+        db = get_database()
+        updates = entry.dict(exclude_unset=True)
+        
+        if not updates:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        success = db.update_journal_entry(entry_id, **updates)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        
+        return {"status": "ok", "entry_id": entry_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error updating journal entry")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/journal/{entry_id}")
+async def delete_journal_entry(
+    entry_id: int,
+    _: str = Depends(verify_api_key)
+):
+    """Delete a journal entry."""
+    try:
+        db = get_database()
+        success = db.delete_journal_entry(entry_id)
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Entry not found")
+        
+        return {"status": "ok"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error deleting journal entry")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============== Trade History Endpoints ==============
+
+@app.get("/api/trades/history")
+async def get_trade_history(
+    symbol: Optional[str] = None,
+    strategy: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    _: str = Depends(verify_api_key)
+):
+    """Get historical trades from database."""
+    try:
+        db = get_database()
+        trades = db.get_trades(
+            symbol=symbol,
+            strategy=strategy,
+            limit=limit,
+            offset=offset
+        )
+        return {"trades": trades, "count": len(trades)}
+    except Exception as e:
+        logger.exception("Error fetching trade history")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/trades/stats")
+async def get_trade_stats(_: str = Depends(verify_api_key)):
+    """Get aggregated trade statistics."""
+    try:
+        db = get_database()
+        stats = db.get_trade_stats()
+        return stats
+    except Exception as e:
+        logger.exception("Error fetching trade stats")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============== Data Endpoints ==============
 
 @app.get("/api/symbols/{exchange_id}")
-async def get_symbols(exchange_id: str):
+async def get_symbols(exchange_id: str, _: str = Depends(verify_api_key)):
     """Get available trading symbols for an exchange."""
     try:
         exchange = ExchangeManager()
@@ -505,7 +718,7 @@ async def get_symbols(exchange_id: str):
 
 
 @app.get("/api/timeframes")
-async def get_timeframes():
+async def get_timeframes(_: str = Depends(verify_api_key)):
     """Get available timeframes."""
     return {
         "timeframes": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
@@ -516,12 +729,118 @@ async def get_timeframes():
 
 @app.get("/api/health")
 async def health_check():
-    """Health check endpoint."""
+    """Basic health check endpoint (no auth required)."""
     return {
         "status": "ok",
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0"
     }
+
+
+@app.get("/api/health/detailed")
+async def health_check_detailed(_: str = Depends(verify_api_key)):
+    """
+    Detailed health check with system status.
+    
+    Returns:
+        - System status (memory, CPU)
+        - Live trading engine status
+        - Active backtest jobs
+        - Exchange connectivity
+        - Database status
+        - Uptime
+    """
+    health_data = {
+        "status": "ok",
+        "timestamp": datetime.now().isoformat(),
+        "version": "1.0.0",
+        "uptime_seconds": (datetime.now() - SERVER_START_TIME).total_seconds(),
+        "components": {}
+    }
+    
+    # System metrics
+    try:
+        process = psutil.Process()
+        health_data["system"] = {
+            "memory_mb": round(process.memory_info().rss / 1024 / 1024, 2),
+            "memory_percent": round(process.memory_percent(), 2),
+            "cpu_percent": round(process.cpu_percent(interval=0.1), 2),
+            "threads": process.num_threads()
+        }
+    except Exception as e:
+        health_data["system"] = {"error": str(e)}
+    
+    # Live trading engine status
+    if live_engine:
+        status = live_engine.get_status()
+        health_data["components"]["live_trading"] = {
+            "status": "running" if status.get("running") else "stopped",
+            "mode": status.get("mode"),
+            "trades_count": status.get("trades_count", 0),
+            "has_position": status.get("position") is not None
+        }
+    else:
+        health_data["components"]["live_trading"] = {"status": "not_initialized"}
+    
+    # Backtest jobs status
+    active_jobs = sum(1 for j in backtest_jobs.values() if j["status"] in ("pending", "running"))
+    completed_jobs = sum(1 for j in backtest_jobs.values() if j["status"] == "completed")
+    failed_jobs = sum(1 for j in backtest_jobs.values() if j["status"] == "failed")
+    
+    health_data["components"]["backtesting"] = {
+        "active_jobs": active_jobs,
+        "completed_jobs": completed_jobs,
+        "failed_jobs": failed_jobs,
+        "total_jobs": len(backtest_jobs)
+    }
+    
+    # Database status
+    try:
+        db = get_database()
+        stats = db.get_trade_stats()
+        health_data["components"]["database"] = {
+            "status": "connected",
+            "total_trades": stats.get("total_trades", 0),
+            "path": str(db.db_path)
+        }
+    except Exception as e:
+        health_data["components"]["database"] = {
+            "status": "error",
+            "error": str(e)
+        }
+    
+    # Exchange connectivity (check configured exchanges)
+    configured_exchanges = config.get("exchanges", {})
+    exchange_status = {}
+    
+    for exchange_id in list(configured_exchanges.keys())[:3]:  # Limit to 3 exchanges
+        try:
+            em = ExchangeManager()
+            em.connect(exchange_id)
+            # Try to fetch markets as a connectivity test
+            em.exchange.load_markets()
+            exchange_status[exchange_id] = "connected"
+        except Exception as e:
+            exchange_status[exchange_id] = f"error: {str(e)[:50]}"
+    
+    health_data["components"]["exchanges"] = exchange_status
+    
+    # Notification channels
+    try:
+        from src.notifications.manager import get_notification_manager
+        manager = get_notification_manager(config._config)
+        if manager:
+            health_data["components"]["notifications"] = {
+                "enabled_channels": manager.enabled_channels
+            }
+    except Exception:
+        health_data["components"]["notifications"] = {"status": "not_configured"}
+    
+    # Determine overall status
+    if health_data.get("system", {}).get("error"):
+        health_data["status"] = "degraded"
+    
+    return health_data
 
 
 # ============== Server Runner ==============

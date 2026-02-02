@@ -1,0 +1,75 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Electron GUI (not needed in Python container)
+electron/
+node_modules/
+
+# Data files (mounted as volumes instead)
+data/*.db
+data/ohlcv/
+reports/*.html
+
+# Config (mounted as volume)
+config/config.yaml
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation images
+images/
+
+# Scripts
+start.bat
+start.sh
+build.py
+
+# Test files
+tests/
+test_*.py
+*_test.py
