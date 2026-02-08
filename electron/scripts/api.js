@@ -6,6 +6,20 @@ class ApiClient {
     constructor() {
         this.baseUrl = 'http://127.0.0.1:8765';
         this.connected = false;
+        this.apiKey = '';
+    }
+    
+    /**
+     * Set API key for authenticated requests (when server has api.auth_enabled).
+     */
+    setApiKey(key) {
+        this.apiKey = (key && typeof key === 'string') ? key.trim() : '';
+    }
+    
+    _headers() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.apiKey) headers['X-API-Key'] = this.apiKey;
+        return headers;
     }
     
     /**
@@ -46,13 +60,12 @@ class ApiClient {
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: this._headers()
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                const err = await this._errorFromResponse(response);
+                throw err;
             }
             
             return await response.json();
@@ -62,6 +75,18 @@ class ApiClient {
         }
     }
     
+    async _errorFromResponse(response) {
+        let detail = '';
+        try {
+            const body = await response.json();
+            detail = body.detail || '';
+        } catch (_) {}
+        if (response.status === 401 || response.status === 403) {
+            return new Error('API key required or invalid. Set it in Settings.');
+        }
+        return new Error(detail || `HTTP ${response.status}`);
+    }
+    
     /**
      * Make a POST request
      */
@@ -69,15 +94,13 @@ class ApiClient {
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: this._headers(),
                 body: JSON.stringify(data)
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || `HTTP ${response.status}`);
+                const err = await this._errorFromResponse(response);
+                throw err;
             }
             
             return await response.json();
@@ -94,13 +117,12 @@ class ApiClient {
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: this._headers()
             });
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                const err = await this._errorFromResponse(response);
+                throw err;
             }
             
             return await response.json();

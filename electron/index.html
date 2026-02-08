@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:*">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' http://127.0.0.1:* https://fonts.googleapis.com https://fonts.gstatic.com">
     <title>Crypto Trading Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
@@ -59,32 +62,15 @@
                     <h2>Dashboard</h2>
                 </div>
                 <div class="page-content">
+                    <div class="dashboard-intro card">
+                        <p class="dashboard-lead">Backtest strategies and run them on real or paper trading.</p>
+                        <p class="dashboard-steps">Configure an exchange → pick a strategy → backtest → paper trade first.</p>
+                        <ul class="dashboard-tips">
+                            <li>Trending: Trend Momentum, MA Crossover. Ranging: Mean Reversion, RSI.</li>
+                            <li>Use 4h or 1d timeframe. Start with paper trading.</li>
+                        </ul>
+                    </div>
                     <div class="cards-grid">
-                        <div class="card">
-                            <h3>Welcome to Crypto Trading Bot</h3>
-                            <p>Backtest trading strategies and execute them on cryptocurrency exchanges.</p>
-                        </div>
-                        
-                        <div class="card">
-                            <h3>Getting Started</h3>
-                            <ol>
-                                <li>Configure an exchange in Settings</li>
-                                <li>Choose a strategy that fits your market view</li>
-                                <li>Run a backtest to see historical performance</li>
-                                <li>Start paper trading to test in real-time</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="card">
-                            <h3>Strategy Tips</h3>
-                            <ul>
-                                <li><strong>Trending market:</strong> Use Trend Momentum or MA Crossover</li>
-                                <li><strong>Ranging market:</strong> Use Mean Reversion or RSI</li>
-                                <li>Always use 4h or 1d timeframe for better signals</li>
-                                <li>Start with paper trading, never risk real money first</li>
-                            </ul>
-                        </div>
-                        
                         <div class="card stats-card" id="statsCard">
                             <h3>Quick Stats</h3>
                             <div class="stats-grid">
@@ -168,7 +154,7 @@
                         </div>
                         
                         <button id="btnRunBacktest" class="btn btn-primary btn-lg">
-                            Run Backtest
+                            Run
                         </button>
                     </div>
                     
@@ -210,7 +196,7 @@
                             </div>
                         </div>
                         <button id="btnOpenReport" class="btn btn-secondary">
-                            Open HTML Report
+                            Open report
                         </button>
                     </div>
                 </div>
@@ -295,10 +281,10 @@
                         
                         <div class="btn-group">
                             <button id="btnStartLive" class="btn btn-success">
-                                Start Trading
+                                Start
                             </button>
                             <button id="btnStopLive" class="btn btn-danger" disabled>
-                                Stop Trading
+                                Stop
                             </button>
                         </div>
                     </div>
@@ -393,7 +379,7 @@
                                 <label for="newSandbox">Sandbox Mode (Testnet)</label>
                             </div>
                             <button id="btnAddExchange" class="btn btn-primary">
-                                Add Exchange
+                                Add
                             </button>
                         </div>
                     </div>
@@ -407,7 +393,17 @@
                 </div>
                 <div class="page-content">
                     <div class="card">
-                        <h3>Default Settings</h3>
+                        <h3>API Key</h3>
+                        <div class="form-container">
+                            <div class="form-group">
+                                <label for="settingsApiKey">API Key</label>
+                                <input type="password" id="settingsApiKey" class="form-control" placeholder="Leave empty if auth is disabled">
+                                <small class="form-hint">Required when the server has API authentication enabled. Same value as in config or TRADING_BOT_API_KEY.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Defaults</h3>
                         <div class="form-container">
                             <div class="form-group">
                                 <label for="settingsCapital">Default Initial Capital ($)</label>
@@ -418,7 +414,7 @@
                                 <input type="number" id="settingsFee" class="form-control" value="0.1" step="0.01">
                             </div>
                             <button id="btnSaveSettings" class="btn btn-primary">
-                                Save Settings
+                                Save
                             </button>
                         </div>
                     </div>

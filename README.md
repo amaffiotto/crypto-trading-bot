@@ -265,6 +265,24 @@ Record notes and lessons from your trades via API:
 - `PATCH /api/journal/{id}` - Update entry
 - `DELETE /api/journal/{id}` - Delete entry
 
+### Deployment (Cloud / VPS)
+
+Run the bot on a cloud VM (e.g. AWS EC2, GCP Compute Engine, DigitalOcean):
+
+1. **Provision a VM** (Linux, e.g. Ubuntu 22.04). Install Docker and Docker Compose.
+2. **Clone the repo** and copy `config/config.example.yaml` to `config/config.yaml`. Configure exchanges and (recommended) set `api.auth_enabled: true` and a strong `api.api_key`, or set the `TRADING_BOT_API_KEY` environment variable.
+3. **Run with Docker:** `docker-compose up -d`. The API listens on port 8765.
+4. **Persist data:** Bind-mount `./data`, `./reports`, and `./config` so state and config survive restarts (already in `docker-compose.yml`).
+5. **Optional:** Put the API behind a reverse proxy (Caddy or Nginx) for HTTPS and expose only the proxy port. Do not expose the API to the internet without auth.
+
+The GUI (Electron) runs on your local machine and points to the server URL; when auth is enabled, set the same API key in the app’s Settings.
+
+### Backup and recovery
+
+- **What to back up:** `config/config.yaml`, the `data/` directory (SQLite DB at `data/trading.db` and OHLCV cache under `data/ohlcv/`), and any custom strategies in `src/strategies/custom/`.
+- **Recovery:** Restore those paths on a new machine or container, then start the bot again (`docker-compose up -d` or `python start.py`). The app will use the restored config and database.
+- **Production tip:** Schedule regular copies of `data/trading.db` and `config/config.yaml` (e.g. daily) to a safe location so you can restore quickly after a failure.
+
 ---
 
 ## Roadmap (TODO)
@@ -308,9 +326,9 @@ Features needed before real money trading:
 
 ### Infrastructure
 - [x] ~~Docker containerization~~ (Dockerfile + docker-compose)
-- [ ] Cloud deployment guide (AWS/GCP)
+- [x] ~~Cloud deployment guide (AWS/GCP)~~ (Deployment section above)
 - [x] ~~Database for trade history~~ (SQLite)
-- [ ] Backup & recovery procedures
+- [x] ~~Backup & recovery procedures~~ (Backup and recovery section above)
 - [x] ~~API authentication for remote access~~ (API key middleware)
 
 ---

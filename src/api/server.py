@@ -111,6 +111,28 @@ live_strategy: Optional[Any] = None
 live_params: Dict[str, str] = {}
 
 
+def _get_exchanges_config(cfg: ConfigManager) -> Dict[str, Any]:
+    """
+    Normalize exchanges config to a dict keyed by exchange id.
+    Handles both list format (old/CLI) and dict format (API).
+    """
+    raw = cfg.get("exchanges")
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, list) and raw:
+        result = {}
+        for item in raw:
+            if isinstance(item, dict) and item.get("name"):
+                name = item["name"]
+                result[name] = {
+                    "api_key": item.get("api_key", ""),
+                    "api_secret": item.get("api_secret", ""),
+                    "sandbox": item.get("sandbox", False),
+                }
+        return result
+    return {}
+
+
 # ============== Request/Response Models ==============
 
 class BacktestRequest(BaseModel):
@@ -243,7 +265,7 @@ async def get_strategy(name: str, _: str = Depends(verify_api_key)):
 @app.get("/api/exchanges")
 async def get_exchanges(_: str = Depends(verify_api_key)):
     """Get list of configured exchanges."""
-    configured = config.get("exchanges", {})
+    configured = _get_exchanges_config(config)
     return {
         "configured": list(configured.keys()),
         "available": ["binance", "coinbase", "kraken", "kucoin", "bybit", "okx"]
@@ -253,7 +275,7 @@ async def get_exchanges(_: str = Depends(verify_api_key)):
 @app.post("/api/exchanges")
 async def add_exchange(exchange_config: ExchangeConfig, _: str = Depends(verify_api_key)):
     """Add or update an exchange configuration."""
-    exchanges = config.get("exchanges", {})
+    exchanges = _get_exchanges_config(config)
     exchanges[exchange_config.exchange_id] = {
         "api_key": exchange_config.api_key,
         "api_secret": exchange_config.api_secret,
@@ -267,7 +289,7 @@ async def add_exchange(exchange_config: ExchangeConfig, _: str = Depends(verify_
 @app.delete("/api/exchanges/{exchange_id}")
 async def remove_exchange(exchange_id: str, _: str = Depends(verify_api_key)):
     """Remove an exchange configuration."""
-    exchanges = config.get("exchanges", {})
+    exchanges = _get_exchanges_config(config)
     if exchange_id in exchanges:
         del exchanges[exchange_id]
         config.set("exchanges", exchanges)
@@ -810,7 +832,7 @@ async def health_check_detailed(_: str = Depends(verify_api_key)):
         }
     
     # Exchange connectivity (check configured exchanges)
-    configured_exchanges = config.get("exchanges", {})
+    configured_exchanges = _get_exchanges_config(config)
     exchange_status = {}
     
     for exchange_id in list(configured_exchanges.keys())[:3]:  # Limit to 3 exchanges

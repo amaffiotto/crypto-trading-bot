@@ -4,26 +4,26 @@
 
 /* CSS Variables */
 :root {
-    --bg-primary: #0a0a14;
-    --bg-secondary: #12121e;
-    --bg-tertiary: #1a1a2e;
+    --bg-primary: #0c0c12;
+    --bg-secondary: #14141c;
+    --bg-tertiary: #1c1c28;
     --bg-card: #16162a;
-    --bg-hover: #1e1e3a;
+    --bg-hover: #1e1e32;
     
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0b0;
-    --text-muted: #606070;
+    --text-primary: #e8e8ec;
+    --text-secondary: #9898a8;
+    --text-muted: #5c5c6c;
     
-    --accent-primary: #00d4ff;
-    --accent-success: #00c853;
-    --accent-warning: #ffab00;
-    --accent-danger: #ff5252;
+    --accent-primary: #c9a227;
+    --accent-success: #2d8a5e;
+    --accent-warning: #c49420;
+    --accent-danger: #c44c4c;
     
-    --border-color: #2a2a4a;
-    --border-radius: 8px;
+    --border-color: #2a2a3e;
+    --border-radius: 6px;
     
-    --sidebar-width: 220px;
-    --header-height: 60px;
+    --sidebar-width: 200px;
+    --header-height: 56px;
 }
 
 /* Reset */
@@ -36,7 +36,7 @@
 /* Base */
 html, body {
     height: 100%;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     color: var(--text-primary);
@@ -61,7 +61,7 @@ html, body {
 }
 
 .sidebar-header {
-    padding: 20px;
+    padding: 16px 18px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -156,8 +156,8 @@ html, body {
 /* Pages */
 .page {
     display: none;
-    padding: 20px 30px;
-    animation: fadeIn 0.3s ease;
+    padding: 18px 24px;
+    animation: fadeIn 0.25s ease;
 }
 
 .page.active {
@@ -170,13 +170,13 @@ html, body {
 }
 
 .page-header {
-    margin-bottom: 25px;
-    padding-bottom: 15px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
     border-bottom: 1px solid var(--border-color);
 }
 
 .page-header h2 {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--text-primary);
 }
@@ -186,67 +186,103 @@ html, body {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
 }
 
 .card h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     color: var(--text-primary);
 }
 
 .card p, .card li {
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .card ul, .card ol {
-    padding-left: 20px;
+    padding-left: 18px;
+}
+
+.dashboard-intro {
+    margin-bottom: 18px;
+}
+
+.dashboard-lead {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.dashboard-steps {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.dashboard-tips {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    padding-left: 18px;
+}
+
+.dashboard-tips li {
+    margin-bottom: 4px;
 }
 
 .cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
 }
 
 /* Stats */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+    gap: 12px;
 }
 
 .stat {
     text-align: center;
-    padding: 15px;
+    padding: 14px;
     background: var(--bg-tertiary);
     border-radius: var(--border-radius);
 }
 
+.stats-card {
+    border-color: var(--border-color);
+}
+
+.stats-card .stat-value {
+    font-size: 22px;
+}
+
 .stat-value {
     display: block;
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 600;
     color: var(--accent-primary);
 }
 
 .stat-label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
-    margin-top: 5px;
+    margin-top: 4px;
 }
 
 /* Forms */
 .form-container {
-    max-width: 600px;
+    max-width: 560px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .form-group label {
@@ -338,7 +374,7 @@ html, body {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #00b8e0;
+    background: #b8921f;
 }
 
 .btn-secondary {
@@ -357,7 +393,7 @@ html, body {
 }
 
 .btn-success:hover:not(:disabled) {
-    background: #00a846;
+    background: #267a52;
 }
 
 .btn-danger {
@@ -366,7 +402,7 @@ html, body {
 }
 
 .btn-danger:hover:not(:disabled) {
-    background: #e04545;
+    background: #a83d3d;
 }
 
 .btn-lg {

@@ -134,8 +134,11 @@ class ConfigManager:
         config[keys[-1]] = value
     
     def get_exchanges(self) -> List[Dict[str, Any]]:
-        """Get list of configured exchanges."""
-        return self.get("exchanges", [])
+        """Get list of configured exchanges (each with 'name', 'api_key', 'api_secret', 'sandbox')."""
+        raw = self.get("exchanges", [])
+        if isinstance(raw, dict):
+            return [{"name": k, "api_key": v.get("api_key", ""), "api_secret": v.get("api_secret", ""), "sandbox": v.get("sandbox", False)} for k, v in raw.items()]
+        return raw if isinstance(raw, list) else []
     
     def add_exchange(self, name: str, api_key: str, api_secret: str, 
                      sandbox: bool = False) -> None:

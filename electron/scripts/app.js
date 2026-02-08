@@ -15,8 +15,30 @@ const pages = document.querySelectorAll('.page');
 
 // ============== Initialization ==============
 
+const API_KEY_STORAGE = 'tradingBotApiKey';
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Crypto Trading Bot...');
+    
+    // Apply saved API key before any requests
+    const savedApiKey = localStorage.getItem(API_KEY_STORAGE);
+    if (savedApiKey) {
+        api.setApiKey(savedApiKey);
+    }
+    const apiKeyInput = document.getElementById('settingsApiKey');
+    if (apiKeyInput) {
+        if (savedApiKey) apiKeyInput.placeholder = '••••••••';
+        apiKeyInput.addEventListener('input', () => {
+            const key = apiKeyInput.value.trim();
+            api.setApiKey(key);
+            if (key) localStorage.setItem(API_KEY_STORAGE, key);
+            else localStorage.removeItem(API_KEY_STORAGE);
+        });
+        apiKeyInput.addEventListener('blur', () => {
+            if (savedApiKey && !apiKeyInput.value) apiKeyInput.placeholder = '••••••••';
+            else if (!apiKeyInput.value) apiKeyInput.placeholder = 'Leave empty if auth is disabled';
+        });
+    }
     
     // Initialize API client
     await initializeApi();
@@ -105,10 +127,10 @@ async function updateDashboardStats() {
         strategyCount.textContent = strategies.length;
         
         const exchanges = await api.getExchanges();
-        exchangeCount.textContent = exchanges.configured.length;
+        exchangeCount.textContent = (exchanges && exchanges.configured && exchanges.configured.length) ?? 0;
         
         const backtests = await api.listBacktests();
-        backtestCount.textContent = backtests.length;
+        backtestCount.textContent = Array.isArray(backtests) ? backtests.length : 0;
     } catch (error) {
         console.error('Failed to load dashboard stats:', error);
     }
@@ -488,10 +510,14 @@ function updateLiveUI(running, status = null) {
     }
     
     if (running && status) {
-        document.getElementById('livePnL').textContent = `$${status.session_pnl.toFixed(2)}`;
-        document.getElementById('liveTradesCount').textContent = status.trades_count;
-        document.getElementById('livePosition').textContent = status.position ? 
-            `${status.position.side} ${status.position.size}` : 'None';
+        const pnl = (status.session_pnl != null) ? Number(status.session_pnl) : 0;
+        document.getElementById('livePnL').textContent = `$${pnl.toFixed(2)}`;
+        document.getElementById('liveTradesCount').textContent = status.trades_count ?? 0;
+        const pos = status.position;
+        const posStr = (pos && (pos.side || pos.quantity != null || pos.size != null))
+            ? `${pos.side || '?'} ${pos.quantity ?? pos.size ?? ''}`
+            : 'None';
+        document.getElementById('livePosition').textContent = posStr;
     } else if (!running) {
         statsContainer.classList.add('hidden');
     }
@@ -523,8 +549,10 @@ function startLivePolling() {
             
             // Update balance
             const balance = await api.getLiveBalance();
-            if (balance.balance) {
-                document.getElementById('liveBalance').textContent = `$${balance.balance.toFixed(2)}`;
+            const balEl = document.getElementById('liveBalance');
+            if (balEl) {
+                const b = (balance && balance.balance != null) ? Number(balance.balance) : 0;
+                balEl.textContent = `$${b.toFixed(2)}`;
             }
         } catch (error) {
             console.error('Polling error:', error);
