@@ -273,7 +273,7 @@ class MetricsCalculator:
         equity_curve.set_index("timestamp", inplace=True)
         
         # Resample to monthly and calculate returns
-        monthly = equity_curve["equity"].resample("M").last()
+        monthly = equity_curve["equity"].resample("ME").last()
         monthly_returns = monthly.pct_change() * 100
         
         # Create year/month pivot

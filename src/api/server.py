@@ -6,8 +6,14 @@ Provides REST API endpoints for the Electron GUI.
 
 import asyncio
 import os
-import psutil
 import secrets
+
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    psutil = None
+    HAS_PSUTIL = False
 import threading
 import uuid
 from datetime import datetime

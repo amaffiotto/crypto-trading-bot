@@ -128,3 +128,28 @@ supervisor:
   restart_window: 300       # Time window in seconds (5 minutes)
   initial_delay: 1.0        # Initial delay before restart (seconds)
   max_delay: 60.0           # Maximum delay between restarts
+
+# ML Signal Filter (NEW)
+ml_filter:
+  enabled: false
+  model_type: "gradient_boosting"  # "gradient_boosting", "random_forest", or "lstm"
+  model_path: "data/models/"
+  confidence_threshold: 0.55
+  retrain_interval_hours: 168  # Re-train every week
+
+# Sentiment Analysis Filter (NEW)
+sentiment:
+  enabled: false
+  fear_greed_threshold: 25     # Block buys when FNG below this
+  greed_threshold: 75          # Block sells when FNG above this
+  news_api_key: ""             # CryptoCompare API key (optional, free tier)
+  news_sentiment_weight: 0.3   # 0 = ignore news, 1 = news only
+  contrarian: false            # Invert logic (buy fear, sell greed)
+  cache_ttl_minutes: 30
+
+# Strategy Optimizer (NEW)
+optimizer:
+  enabled: false
+  metric: "sharpe_ratio"       # Metric to maximise: sharpe_ratio, total_return_pct, profit_factor
+  n_trials: 100                # Optuna trials per optimisation run
+  retrain_every_bars: 168      # Adaptive re-optimisation interval

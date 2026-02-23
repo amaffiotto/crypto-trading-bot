@@ -311,6 +311,17 @@ class FilteredStrategy(BaseStrategy):
 from src.strategies.filters.regime_detector import RegimeFilter, RegimeDetector
 from src.strategies.filters.multi_timeframe import MultiTimeframeFilter
 
+try:
+    from src.strategies.filters.ml_filter import MLSignalFilter, LSTMSignalFilter
+except ImportError:
+    MLSignalFilter = None
+    LSTMSignalFilter = None
+
+try:
+    from src.strategies.filters.sentiment_filter import SentimentFilter
+except ImportError:
+    SentimentFilter = None
+
 __all__ = [
     'BaseFilter',
     'FilterChain',
@@ -320,4 +331,7 @@ __all__ = [
     'RegimeFilter',
     'RegimeDetector',
     'MultiTimeframeFilter',
+    'MLSignalFilter',
+    'LSTMSignalFilter',
+    'SentimentFilter',
 ]

@@ -162,6 +162,16 @@ python -m src.main
 
 Then select option 1 (CLI) when prompted.
 
+## Deployment & Documentation
+
+For detailed setup, configuration, and deployment instructions, see the **[guides](guides/)** folder:
+
+- **[Getting Started](guides/01-GETTING-STARTED.md)** — Full installation for macOS, Linux, and Windows
+- **[Configuration Reference](guides/02-CONFIGURATION.md)** — Every setting explained
+- **[Docker Deployment](guides/03-DOCKER-DEPLOYMENT.md)** — Run with Docker and Docker Compose
+- **[AWS](guides/04-AWS-DEPLOYMENT.md)** | **[GCP](guides/05-GCP-DEPLOYMENT.md)** | **[VPS](guides/06-VPS-DEPLOYMENT.md)** — Cloud and VPS deployment guides
+- **[Strategy Development](guides/07-STRATEGY-GUIDE.md)** — Build custom strategies, filters, backtesting, and paper trading
+
 ## Project Structure
 
 ```
@@ -311,18 +321,18 @@ Features needed before real money trading:
 - [x] ~~Trade journal with notes~~ (journal API + SQLite)
 
 ### Testing & Validation
-- [ ] Unit tests for core modules
-- [ ] Integration tests with exchange sandbox
-- [ ] Paper trading mode validation (2-3 months)
-- [ ] Walk-forward optimization
-- [ ] Out-of-sample testing
+- [x] ~~Unit tests for core modules~~ (pytest suite: engine, metrics, simulator, strategies, filters, config)
+- [x] ~~Integration tests with exchange sandbox~~ (sandbox tests with `pytest -m integration`)
+- [x] ~~Paper trading mode validation~~ (PaperTradingValidator with fast-forward historical replay)
+- [x] ~~Walk-forward optimization~~ (WalkForwardEngine with Optuna)
+- [x] ~~Out-of-sample testing~~ (OOSTester with overfitting score)
 
 ### Strategy Improvements
-- [ ] Machine learning signal filtering
+- [x] ~~Machine learning signal filtering~~ (MLSignalFilter + LSTMSignalFilter)
 - [x] ~~Multi-timeframe confirmation~~ (MultiTimeframeFilter)
-- [ ] Sentiment analysis integration
+- [x] ~~Sentiment analysis integration~~ (SentimentFilter: Fear & Greed + VADER)
 - [x] ~~Market regime detection (bull/bear/sideways)~~ (RegimeFilter)
-- [ ] Dynamic parameter optimization
+- [x] ~~Dynamic parameter optimization~~ (StrategyOptimizer with Bayesian/Optuna)
 
 ### Infrastructure
 - [x] ~~Docker containerization~~ (Dockerfile + docker-compose)
